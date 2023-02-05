@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { writable } from 'svelte/store';
-
+	console.log($page);
 	const bc = writable([] as { href: string; text: string }[]);
 
 	$: path = $page.url.pathname;
 	$: $bc = getBreadCrumbs(path);
 
+	let productCategories = productCategory();
+
 	function getBreadCrumbs(path: string) {
 		const pathParts = path.split('/').filter((part) => part?.trim() !== '');
 
 		const refs = pathParts.map((item, idx) => {
-			// check if item is a number
 			if (parseInt(item)) {
-				// if true replace it with product title
 				let title = productTitle();
 				item = title;
 			}
@@ -24,13 +24,30 @@
 		});
 		return refs;
 	}
-
+	// get product title
 	function productTitle() {
-		const match = $page.data?.products?.filter(
+		const currProduct = $page.data?.products?.filter(
 			({ id }: any) => id?.toString() === $page.params?.id
 		)[0];
-		return match.title;
+
+		return currProduct.title;
 	}
+
+	// create a new array of products categories as new Set to remove duplicates
+	function productCategory() {
+		const products = $page.data?.products;
+		let prodCats: string[] = [];
+
+		products.forEach((product: any) => {
+			prodCats = [...(new Set([...prodCats, product.category]) as Set<string>)];
+		});
+
+		return prodCats;
+	}
+	
+	// console.log('productCategories: ', productCategories);
+
+	// TODO: create select element with product categories as options in breadcrumb
 </script>
 
 <nav aria-label="breadcrumbs">
