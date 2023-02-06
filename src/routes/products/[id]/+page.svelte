@@ -1,10 +1,15 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { page } from '$app/stores';
-	export let data: PageData;
-	// console.log($page);
-	const match = data?.products?.filter(({ id }) => id.toString() === $page.params.id);
+	// export let data: PageData;
+	import {productsStore, selectedCategoryStore} from '$lib/stores/productsStore';
+	// console.log(data);
+	const match = $productsStore.filter(({ id }) => id === id);
+	// console.log('🚀 ~ file: +page.svelte:8 ~ match', match)
+
+	
 	const { title, description, category } = match[0] || {};
+	// $productsStore = $page.data.products || selected;
 </script>
 
 <h1>Product</h1>

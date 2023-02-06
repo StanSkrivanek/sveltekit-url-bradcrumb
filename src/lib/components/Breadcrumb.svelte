@@ -1,14 +1,23 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { productsStore, selectedCategoryStore } from '$lib/stores/productsStore';
 	import { writable } from 'svelte/store';
-	console.log($page);
+
 	const bc = writable([] as { href: string; text: string }[]);
+	let productCategories = productCategory();
 
 	$: path = $page.url.pathname;
 	$: $bc = getBreadCrumbs(path);
+	$: selected = 'all';
 
-	let productCategories = productCategory();
+	// Stores
+	$productsStore = $page.data.products || selected;
+	$selectedCategoryStore = selected;
 
+	$: console.log('🚀 ~ file: Breadcrumb.svelte:16 ~ productsStore', $productsStore);
+
+	// ctrate breadcrumbs array from path
 	function getBreadCrumbs(path: string) {
 		const pathParts = path.split('/').filter((part) => part?.trim() !== '');
 
@@ -24,7 +33,7 @@
 		});
 		return refs;
 	}
-	// get product title
+	// get current product title
 	function productTitle() {
 		const currProduct = $page.data?.products?.filter(
 			({ id }: any) => id?.toString() === $page.params?.id
@@ -32,29 +41,60 @@
 
 		return currProduct.title;
 	}
-
 	// create a new array of products categories as new Set to remove duplicates
 	function productCategory() {
-		const products = $page.data?.products;
-		let prodCats: string[] = [];
+		const productsList = $page.data?.products;
+		let prodCategories: string[] = [];
 
-		products.forEach((product: any) => {
-			prodCats = [...(new Set([...prodCats, product.category]) as Set<string>)];
+		productsList.forEach((product: any) => {
+			prodCategories = [...(new Set([...prodCategories, product.category]) as Set<string>)];
 		});
 
-		return prodCats;
+		return prodCategories;
 	}
-	
-	// console.log('productCategories: ', productCategories);
 
-	// TODO: create select element with product categories as options in breadcrumb
+	// filter products by category
+
+	function filterProducts(selected: any) {
+		if (selected === 'all') {
+			return ($productsStore = $page.data.products);
+		}
+		$productsStore = $page.data.products.filter((product: any) => {
+			if (product.category === selected) {
+				return product;
+			}
+		});
+		goto('/products');
+	}
+
+	// TODO:
+	// DONE: 1. on crumb (anchor) click reset the selected value to 'all' and show all products
+	// DONE 2. on select change remove single product (last crumb) [goto ???]
+	// 3. on product link click change selet option
+
+	function resetPath() {
+		selected = 'all';
+		$productsStore = $page.data.products;
+	}
 </script>
 
 <nav aria-label="breadcrumbs">
 	<ol class="breadcrumbs">
-		<li><a href="/">HOME</a></li>
+		<li>
+			<a href="/"> Home </a>
+		</li>
 		{#each $bc as crumb}
-			<li><a href={crumb?.href}>{crumb?.text}</a></li>
+			<li>
+				<a href={crumb?.href} on:click={resetPath}>{crumb?.text}</a>
+				{#if crumb?.text === 'products'}
+					<select bind:value={selected} on:change={() => filterProducts(selected)}>
+						<option value="all">all</option>
+						{#each productCategories as category}
+							<option value={category}>{category}</option>
+						{/each}
+					</select>
+				{/if}
+			</li>
 		{/each}
 	</ol>
 </nav>
