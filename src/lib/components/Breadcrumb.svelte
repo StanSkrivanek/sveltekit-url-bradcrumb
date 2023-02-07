@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { productsStore, selectedCategoryStore } from '$lib/stores/productsStore';
+	import { productsStore, selectedCategoryStore, disabledCrumb } from '$lib/stores/productsStore';
 	import { writable } from 'svelte/store';
 
 	const bc = writable([] as { href: string; text: string }[]);
@@ -15,13 +15,15 @@
 	$productsStore = $page.data.products || selected;
 	$selectedCategoryStore = selected;
 
-	$: console.log('🚀 ~ file: Breadcrumb.svelte:16 ~ productsStore', $productsStore);
-
+	// $: console.log('🚀 ~ file: Breadcrumb.svelte:168 ~ productsStore', $productsStore);
+	$: console.log('🚀 ~ file: Breadcrumb.svelte:19 ~ disabledCrumb', $disabledCrumb);
 	// ctrate breadcrumbs array from path
 	function getBreadCrumbs(path: string) {
 		const pathParts = path.split('/').filter((part) => part?.trim() !== '');
 
 		const refs = pathParts.map((item, idx) => {
+			// if parsing from number to string is successfull then it's a product id
+			// so we need to get the product title and use it as a crumb text instead of id
 			if (parseInt(item)) {
 				let title = productTitle();
 				item = title;
@@ -64,17 +66,14 @@
 				return product;
 			}
 		});
+		$disabledCrumb = false;
 		goto('/products');
 	}
-
-	// TODO:
-	// DONE: 1. on crumb (anchor) click reset the selected value to 'all' and show all products
-	// DONE 2. on select change remove single product (last crumb) [goto ???]
-	// 3. on product link click change selet option
 
 	function resetPath() {
 		selected = 'all';
 		$productsStore = $page.data.products;
+		$disabledCrumb = false;
 	}
 </script>
 
@@ -83,18 +82,25 @@
 		<li>
 			<a href="/"> Home </a>
 		</li>
-		{#each $bc as crumb}
-			<li>
-				<a href={crumb?.href} on:click={resetPath}>{crumb?.text}</a>
-				{#if crumb?.text === 'products'}
-					<select bind:value={selected} on:change={() => filterProducts(selected)}>
-						<option value="all">all</option>
-						{#each productCategories as category}
-							<option value={category}>{category}</option>
-						{/each}
-					</select>
-				{/if}
-			</li>
+		{#each $bc as crumb, i}
+		<!-- display only text if it is final link to product -->
+			{#if i === $bc.length - 1 && $disabledCrumb === true}
+				<li>
+					{crumb?.text}
+				</li>
+			{:else}
+				<li>
+					<a href={crumb?.href} on:click={resetPath}>{crumb?.text}</a>
+					{#if crumb?.text === 'products'}
+						<select bind:value={selected} on:change={() => filterProducts(selected)}>
+							<option value="all">all</option>
+							{#each productCategories as category}
+								<option value={category}>{category}</option>
+							{/each}
+						</select>
+					{/if}
+				</li>
+			{/if}
 		{/each}
 	</ol>
 </nav>
