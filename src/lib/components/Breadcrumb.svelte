@@ -11,7 +11,6 @@
 	$: selected = 'all';
 	$productsStore = $page.data.products || selected;
 
-	$: console.log('🚀 ~ file: Breadcrumb.svelte:19 ~ disabledCrumb', $disabledCrumb);
 	
 	// ctrate breadcrumbs array from path
 	function getBreadCrumbs(path: string) {

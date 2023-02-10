@@ -3,8 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { productsStore, disabledCrumb } from '$lib/stores/productsStore';
 
-	$: showOptions = false;
 	let productCategories = productCategory();
+
+	$: showOptions = false;
 
 	function productCategory() {
 		const productsList = $page.data?.products;
@@ -28,11 +29,14 @@
 		});
 		$disabledCrumb = false;
 		toggleOptions();
+		
 		goto('/products');
 	}
+
 	function toggleOptions() {
 		showOptions = !showOptions;
 	}
+
 	function toggleOptionsByKey(e: any) {
 		if (e.key === 'Enter') {
 			toggleOptions();
